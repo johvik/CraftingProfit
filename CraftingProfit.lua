@@ -12,16 +12,20 @@ local VENDOR_PRICES = {
 local profitTextHeadline
 local profitTextDetails
 
--- Returns the minimum of auction and vendor price
+-- Returns the minimum of auction and vendor price and if the price is from a vendor
 local function GetReagentPrice(reagentName)
   local auctionPrice = Atr_GetAuctionPrice(reagentName)
   local vendorPrice = VENDOR_PRICES[reagentName]
   if auctionPrice and vendorPrice then
-    return math.min(auctionPrice, vendorPrice)
+    if vendorPrice <= auctionPrice then
+      return vendorPrice, true
+    else
+      return auctionPrice, false
+    end
   elseif auctionPrice then
-    return auctionPrice
+    return auctionPrice, false
   else
-    return vendorPrice
+    return vendorPrice, true
   end
 end
 
@@ -33,13 +37,17 @@ local function UpdateCraftingProfit(recipeID)
   local itemAuctionPrice = Atr_GetAuctionPrice(itemName) -- Cannot use Atr_GetAuctionBuyout since it crashes with enchants
   local reagentsPrice = 0
   local reagentsPriceText = {}
+  local reagentsFromVendor = {}
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
 
   for i = 1, numReagents do
     local reagentName, _, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
-    local reagentPrice = GetReagentPrice(reagentName)
+    local reagentPrice, reagentFromVendor = GetReagentPrice(reagentName)
     if reagentPrice then
       reagentsPrice = reagentsPrice + reagentPrice * reagentCount
+      if reagentFromVendor then
+        table.insert(reagentsFromVendor, reagentName)
+      end
     else
       -- Add text description when the price is unknown
       table.insert(reagentsPriceText, reagentCount .. "x" .. reagentName)
@@ -77,6 +85,11 @@ local function UpdateCraftingProfit(recipeID)
     headline = "Profit:"
     profitText = "Unknown"
   end
+
+  if table.getn(reagentsFromVendor) > 0 then
+    profitText = profitText .. "\n\nVendor: " .. table.concat(reagentsFromVendor, ", ")
+  end
+
   profitTextHeadline:SetText(headline)
   profitTextDetails:SetText(profitText)
 end
