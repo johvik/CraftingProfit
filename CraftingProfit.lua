@@ -25,7 +25,7 @@ local function UpdateCraftingProfit(recipeID)
   local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
   local numItemsProduced = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
   local itemName, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(itemLink)
-  local itemAuctionPrice = Atr_GetAuctionBuyout(itemName)
+  local itemAuctionPrice = Atr_GetAuctionPrice(itemName) -- Cannot use Atr_GetAuctionBuyout since it crashes with enchants
   local reagentsPrice = 0
   local reagentsPriceText = {}
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
