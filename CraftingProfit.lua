@@ -1,7 +1,12 @@
 local VENDOR_PRICES = {
-  -- TODO Add more?
+  -- TODO Add more as needed
   ["Crystal Vial"] = 20,
-  ["Royal Olive"] = 5000
+  ["Flaked Sea Salt"] = 5000,
+  ["Dalapeño Pepper"] = 2780,
+  ["Muskenbutter"] = 5000,
+  ["River Onion"] = 5000,
+  ["Royal Olive"] = 5000,
+  ["Stonedark Snail"] = 5000
 }
 
 local profitTextHeadline
