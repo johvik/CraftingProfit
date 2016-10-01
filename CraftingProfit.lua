@@ -30,7 +30,10 @@ local function GetReagentPrice(reagentName)
 end
 
 -- Updates the crafting profit information for the given recipeID
-local function UpdateCraftingProfit(recipeID)
+local function UpdateCraftingProfit(recipeID, callback)
+  if not recipeID then
+    return
+  end
   local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
   local numItemsProduced = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
   local itemName, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(itemLink)
@@ -42,6 +45,15 @@ local function UpdateCraftingProfit(recipeID)
 
   for i = 1, numReagents do
     local reagentName, _, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
+    if not reagentName then
+      profitTextHeadline:SetText("")
+      profitTextDetails:SetText("")
+      if not callback then
+        -- Limit callback to one try
+        C_Timer.After(0.1, function() UpdateCraftingProfit(recipeID, true) end)
+      end
+      return
+    end
     local reagentPrice, reagentFromVendor = GetReagentPrice(reagentName)
     if reagentPrice then
       reagentsPrice = reagentsPrice + reagentPrice * reagentCount
@@ -105,6 +117,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addon)
     if addon == "Blizzard_TradeSkillUI" then
+      frame:UnregisterEvent("ADDON_LOADED")
       -- Initialize after the TradeSkillUI has loaded
       Atr_RegisterFor_DBupdated(UpdateCraftingProfitCurrentSelection)
       profitTextHeadline = TradeSkillFrame.DetailsFrame.Contents:CreateFontString("CraftingProfitTextHeadline", "BACKGROUND", "GameFontNormal")
