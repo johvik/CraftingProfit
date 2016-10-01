@@ -25,7 +25,7 @@ local function UpdateCraftingProfit(recipeID)
   local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
   local numItemsProduced = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
   local itemName, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(itemLink)
-  local itemAuctionPrice = Atr_GetAuctionPrice(itemName)
+  local itemAuctionPrice = Atr_GetAuctionBuyout(itemName)
   local reagentsPrice = 0
   local reagentsPriceText = {}
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
@@ -87,7 +87,8 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addon)
     if addon == "Blizzard_TradeSkillUI" then
-      -- Hook after the TradeSkillUI has loaded
+      -- Initialize after the TradeSkillUI has loaded
+      Atr_RegisterFor_DBupdated(UpdateCraftingProfitCurrentSelection)
       profitTextHeadline = TradeSkillFrame.DetailsFrame.Contents:CreateFontString("CraftingProfitTextHeadline", "BACKGROUND", "GameFontNormal")
       profitTextDetails = TradeSkillFrame.DetailsFrame.Contents:CreateFontString("CraftingProfitTextDetails", "BACKGROUND", "GameFontHighlight")
       profitTextHeadline:SetPoint("TOPLEFT", TradeSkillFrame.DetailsFrame.Contents, "BOTTOMLEFT", 5, -5)
