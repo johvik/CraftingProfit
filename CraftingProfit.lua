@@ -9,8 +9,12 @@ local VENDOR_PRICES = {
   ["Stonedark Snail"] = 5000
 }
 
-local profitTextHeadline
-local profitTextDetails
+CraftingProfitMixin = {}
+
+local function debug_print(...)
+  -- Uncomment to get debug information
+  -- print(...)
+end
 
 -- Returns the minimum of auction and vendor price and if the price is from a vendor
 local function GetReagentPrice(reagentName)
@@ -30,7 +34,9 @@ local function GetReagentPrice(reagentName)
 end
 
 -- Updates the crafting profit information for the given recipeID
-local function UpdateCraftingProfit(recipeID, callback)
+function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
+  debug_print("UpdateCraftingProfit", recipeID, callback)
+  self:Hide()
   if not recipeID then
     return
   end
@@ -46,11 +52,9 @@ local function UpdateCraftingProfit(recipeID, callback)
   for i = 1, numReagents do
     local reagentName, _, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
     if not reagentName then
-      profitTextHeadline:SetText("")
-      profitTextDetails:SetText("")
       if not callback then
         -- Limit callback to one try
-        C_Timer.After(0.1, function() UpdateCraftingProfit(recipeID, true) end)
+        C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
       end
       return
     end
@@ -66,70 +70,81 @@ local function UpdateCraftingProfit(recipeID, callback)
     end
   end
 
-  local profitText
-  local headline
+  local profit
   if itemAuctionPrice and reagentsPrice > 0 then
     -- We have a auction price and at least one reagent price
     local deposit = math.max(100, math.floor(0.15 * itemSellPrice))
     local cut = math.floor(0.05 * itemAuctionPrice)
-    local profit = numItemsProduced * (itemAuctionPrice - deposit - cut) - reagentsPrice
+    profit = numItemsProduced * (itemAuctionPrice - deposit - cut) - reagentsPrice
+  end
+
+  -- Update profit
+  if profit then
+    local profitText = GetCoinTextureString(math.abs(profit))
     if profit > 0 then
-      headline = "Profit:"
-      profitText = GetCoinTextureString(math.abs(profit))
+      self.ProfitHeadline:SetText("Profit: ")
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " - " .. table.concat(reagentsPriceText, " - ")
       end
     else
-      headline = "Waste:"
-      profitText = GetCoinTextureString(math.abs(profit))
+      self.ProfitHeadline:SetText("Waste: ")
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " + " .. table.concat(reagentsPriceText, " + ")
       end
     end
-  elseif reagentsPrice > 0 then
-    -- At least one reagent price
-    headline = "Costs:"
-    profitText = GetCoinTextureString(reagentsPrice)
-    if table.getn(reagentsPriceText) > 0 then
-      profitText = profitText .. " + " .. table.concat(reagentsPriceText, " + ")
-    end
+    self.ProfitText:SetText(profitText)
   else
-    headline = "Profit:"
-    profitText = "Unknown"
+    self.ProfitHeadline:SetText("Profit: ")
+    self.ProfitText:SetText("Unknown")
   end
 
+  -- Update cost
+  if reagentsPrice > 0 then
+    local costText = GetCoinTextureString(reagentsPrice)
+    if table.getn(reagentsPriceText) > 0 then
+      costText = costText .. " + " .. table.concat(reagentsPriceText, " + ")
+    end
+    self.CostText:SetText(costText)
+    self.CostHeadline:Show()
+    self.CostText:Show()
+  else
+    self.CostHeadline:Hide()
+    self.CostText:Hide()
+  end
+
+  -- Update vendor
   if table.getn(reagentsFromVendor) > 0 then
-    profitText = profitText .. "\n\nVendor: " .. table.concat(reagentsFromVendor, ", ")
+    local vendorText = table.concat(reagentsFromVendor, ", ")
+    self.VendorText:SetText(vendorText)
+    self.VendorHeadline:Show()
+    self.VendorText:Show()
+  else
+    self.VendorHeadline:Hide()
+    self.VendorText:Hide()
   end
 
-  profitTextHeadline:SetText(headline)
-  profitTextDetails:SetText(profitText)
+  self:Show()
+  debug_print("UpdateCraftingProfit done")
 end
 
 -- Updates the crafting profit without knowing the current recipeID
 local function UpdateCraftingProfitCurrentSelection()
+  debug_print("UpdateCraftingProfitCurrentSelection")
   if TradeSkillFrame then
-    UpdateCraftingProfit(TradeSkillFrame.RecipeList:GetSelectedRecipeID())
+    CraftingProfitFrame:UpdateCraftingProfit(TradeSkillFrame.RecipeList:GetSelectedRecipeID())
   end
+  debug_print("UpdateCraftingProfitCurrentSelection done")
 end
 
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, addon)
-    if addon == "Blizzard_TradeSkillUI" then
-      frame:UnregisterEvent("ADDON_LOADED")
-      -- Initialize after the TradeSkillUI has loaded
-      Atr_RegisterFor_DBupdated(UpdateCraftingProfitCurrentSelection)
-      profitTextHeadline = TradeSkillFrame.DetailsFrame.Contents:CreateFontString("CraftingProfitTextHeadline", "BACKGROUND", "GameFontNormal")
-      profitTextDetails = TradeSkillFrame.DetailsFrame.Contents:CreateFontString("CraftingProfitTextDetails", "BACKGROUND", "GameFontHighlight")
-      profitTextHeadline:SetPoint("TOPLEFT", TradeSkillFrame.DetailsFrame.Contents, "BOTTOMLEFT", 5, -5)
-      profitTextDetails:SetPoint("TOPLEFT", profitTextHeadline, "BOTTOMLEFT", 0, -5)
-      profitTextDetails:SetWidth(290)
-      profitTextDetails:SetJustifyH("LEFT")
-      profitTextHeadline:SetJustifyH("LEFT")
+function CraftingProfitMixin:OnLoad()
+  debug_print("CraftingProfit OnLoad")
+  self:SetParent(TradeSkillFrame.DetailsFrame.Contents)
+  self:SetPoint("TOPLEFT", TradeSkillFrame.DetailsFrame.Contents, "BOTTOMLEFT", 5, -5)
 
-      hooksecurefunc(TradeSkillFrame.RecipeList, "SetSelectedRecipeID", function(self, recipeID)
-          UpdateCraftingProfit(recipeID)
-        end)
-    end
+  Atr_RegisterFor_DBupdated(UpdateCraftingProfitCurrentSelection)
+
+  hooksecurefunc(TradeSkillFrame.RecipeList, "SetSelectedRecipeID", function(_, recipeID)
+    self:UpdateCraftingProfit(recipeID)
   end)
+  debug_print("CraftingProfit Loaded")
+end

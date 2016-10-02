@@ -1,0 +1,44 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="CraftingProfit.lua"/>
+  <Frame name="CraftingProfitFrame" mixin="CraftingProfitMixin" parent="TradeSkillFrame" hidden="true">
+    <Size x="290" y="1"/>
+    <Layers>
+      <Layer level="BACKGROUND">
+        <FontString parentKey="ProfitHeadline" inherits="GameFontNormal" justifyH="LEFT" text="Profit: ">
+          <Anchors>
+            <Anchor point="TOPLEFT" x="4"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="ProfitText" inherits="GameFontHighlight" justifyH="LEFT">
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeKey="$parent.ProfitHeadline" relativePoint="TOPRIGHT"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="CostHeadline" inherits="GameFontNormal" justifyH="LEFT" text="Cost: ">
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeKey="$parent.ProfitHeadline" relativePoint="BOTTOMLEFT"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="CostText" inherits="GameFontHighlight" justifyH="LEFT">
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeKey="$parent.CostHeadline" relativePoint="TOPRIGHT"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="VendorHeadline" inherits="GameFontNormal" justifyH="LEFT" text="Vendor: ">
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeKey="$parent.CostHeadline" relativePoint="BOTTOMLEFT"/>
+          </Anchors>
+        </FontString>
+        <FontString parentKey="VendorText" inherits="GameFontHighlight" justifyH="LEFT">
+          <Anchors>
+            <Anchor point="TOPLEFT" relativeKey="$parent.VendorHeadline" relativePoint="TOPRIGHT"/>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames></Frames>
+    <Scripts>
+      <OnLoad method="OnLoad"/>
+    </Scripts>
+  </Frame>
+</Ui>
