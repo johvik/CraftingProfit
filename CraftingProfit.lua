@@ -83,19 +83,19 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   if profit then
     local profitText = GetCoinTextureString(math.abs(profit))
     if profit > 0 then
-      self.ProfitHeadline:SetText("Profit: ")
+      self.ProfitText:SetFontObject("GameFontHighlight")
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " - " .. table.concat(reagentsPriceText, " - ")
       end
     else
-      self.ProfitHeadline:SetText("Waste: ")
+      self.ProfitText:SetFontObject("GameFontRed")
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " + " .. table.concat(reagentsPriceText, " + ")
       end
     end
     self.ProfitText:SetText(profitText)
   else
-    self.ProfitHeadline:SetText("Profit: ")
+    self.ProfitText:SetFontObject("GameFontHighlight")
     self.ProfitText:SetText("Unknown")
   end
 

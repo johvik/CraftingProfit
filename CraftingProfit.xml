@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Script file="CraftingProfit.lua"/>
   <Frame name="CraftingProfitFrame" mixin="CraftingProfitMixin" parent="TradeSkillFrame" hidden="true">
-    <Size x="290" y="1"/>
+    <Size x="1" y="1"/>
     <Layers>
       <Layer level="BACKGROUND">
         <FontString parentKey="ProfitHeadline" inherits="GameFontNormal" justifyH="LEFT" text="Profit: ">
@@ -10,26 +10,31 @@
           </Anchors>
         </FontString>
         <FontString parentKey="ProfitText" inherits="GameFontHighlight" justifyH="LEFT">
+          <Size x="245" y="0"/>
           <Anchors>
             <Anchor point="TOPLEFT" relativeKey="$parent.ProfitHeadline" relativePoint="TOPRIGHT"/>
           </Anchors>
         </FontString>
         <FontString parentKey="CostHeadline" inherits="GameFontNormal" justifyH="LEFT" text="Cost: ">
           <Anchors>
-            <Anchor point="TOPLEFT" relativeKey="$parent.ProfitHeadline" relativePoint="BOTTOMLEFT"/>
+            <Anchor point="LEFT" relativeKey="$parent.ProfitHeadline" relativePoint="LEFT"/>
+            <Anchor point="TOP" relativeKey="$parent.ProfitText" relativePoint="BOTTOM"/>
           </Anchors>
         </FontString>
         <FontString parentKey="CostText" inherits="GameFontHighlight" justifyH="LEFT">
+          <Size x="250" y="0"/>
           <Anchors>
             <Anchor point="TOPLEFT" relativeKey="$parent.CostHeadline" relativePoint="TOPRIGHT"/>
           </Anchors>
         </FontString>
         <FontString parentKey="VendorHeadline" inherits="GameFontNormal" justifyH="LEFT" text="Vendor: ">
           <Anchors>
-            <Anchor point="TOPLEFT" relativeKey="$parent.CostHeadline" relativePoint="BOTTOMLEFT"/>
+            <Anchor point="LEFT" relativeKey="$parent.CostHeadline" relativePoint="LEFT"/>
+            <Anchor point="TOP" relativeKey="$parent.CostText" relativePoint="BOTTOM"/>
           </Anchors>
         </FontString>
         <FontString parentKey="VendorText" inherits="GameFontHighlight" justifyH="LEFT">
+          <Size x="230" y="0"/>
           <Anchors>
             <Anchor point="TOPLEFT" relativeKey="$parent.VendorHeadline" relativePoint="TOPRIGHT"/>
           </Anchors>
