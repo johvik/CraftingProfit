@@ -43,12 +43,20 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
   local numItemsProduced = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
   local itemName, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(itemLink)
-  local itemAuctionPrice = Atr_GetAuctionPrice(itemName) -- Cannot use Atr_GetAuctionBuyout since it crashes with enchants
   local reagentsPrice = 0
   local reagentsPriceText = {}
   local reagentsFromVendor = {}
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
 
+  if not itemName then
+    if not callback then
+      -- Limit callback to one try
+      C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
+    end
+    return
+  end
+
+  debug_print("Getting reagents for ", itemName)
   for i = 1, numReagents do
     local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
     if not reagentName then
@@ -71,6 +79,8 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
     end
   end
 
+  debug_print("Getting auction price")
+  local itemAuctionPrice = Atr_GetAuctionPrice(itemName) -- Cannot use Atr_GetAuctionBuyout since it crashes with enchants
   local profit
   if itemAuctionPrice and reagentsPrice > 0 then
     -- We have a auction price and at least one reagent price
@@ -79,6 +89,7 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
     profit = numItemsProduced * (itemAuctionPrice - deposit - cut) - reagentsPrice
   end
 
+  debug_print("Updating UI", profit)
   -- Update profit
   if profit then
     local profitText = GetCoinTextureString(math.abs(profit))
@@ -145,7 +156,7 @@ function CraftingProfitMixin:OnLoad()
   Atr_RegisterFor_DBupdated(UpdateCraftingProfitCurrentSelection)
 
   hooksecurefunc(TradeSkillFrame.RecipeList, "SetSelectedRecipeID", function(_, recipeID)
-    self:UpdateCraftingProfit(recipeID)
-  end)
+      self:UpdateCraftingProfit(recipeID)
+    end)
   debug_print("CraftingProfit Loaded")
 end
