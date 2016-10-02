@@ -144,7 +144,7 @@ end
 -- Updates the crafting profit without knowing the current recipeID
 local function UpdateCraftingProfitCurrentSelection()
   debug_print("UpdateCraftingProfitCurrentSelection")
-  if TradeSkillFrame then
+  if TradeSkillFrame and TradeSkillFrame:IsShown() then
     CraftingProfitFrame:UpdateCraftingProfit(TradeSkillFrame.RecipeList:GetSelectedRecipeID())
   end
   debug_print("UpdateCraftingProfitCurrentSelection done")
