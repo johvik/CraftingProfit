@@ -48,7 +48,8 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   local reagentsFromVendor = {}
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
 
-  if not itemName then
+  -- not callback is a hack to let enchants pass, they always have itemName = nil
+  if not itemName and not callback then
     debug_print("No itemName", itemLink, itemSellPrice)
     if not callback then
       -- Limit callback to one try
