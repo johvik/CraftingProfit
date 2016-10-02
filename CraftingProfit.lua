@@ -50,7 +50,7 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
 
   for i = 1, numReagents do
-    local reagentName, _, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
+    local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
     if not reagentName then
       if not callback then
         -- Limit callback to one try
@@ -58,15 +58,16 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
       end
       return
     end
+    local reagentTextureString = "|T"..reagentTexture..":0|t"
     local reagentPrice, reagentFromVendor = GetReagentPrice(reagentName)
     if reagentPrice then
       reagentsPrice = reagentsPrice + reagentPrice * reagentCount
       if reagentFromVendor then
-        table.insert(reagentsFromVendor, reagentName)
+        table.insert(reagentsFromVendor, reagentTextureString)
       end
     else
       -- Add text description when the price is unknown
-      table.insert(reagentsPriceText, reagentCount .. "x" .. reagentName)
+      table.insert(reagentsPriceText, reagentCount .. reagentTextureString)
     end
   end
 
@@ -114,7 +115,7 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
 
   -- Update vendor
   if table.getn(reagentsFromVendor) > 0 then
-    local vendorText = table.concat(reagentsFromVendor, ", ")
+    local vendorText = table.concat(reagentsFromVendor, " ")
     self.VendorText:SetText(vendorText)
     self.VendorHeadline:Show()
     self.VendorText:Show()
