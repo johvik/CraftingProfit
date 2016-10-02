@@ -13,7 +13,21 @@ CraftingProfitMixin = {}
 
 local function debug_print(...)
   -- Uncomment to get debug information
-  -- print(...)
+  if CraftingProfitDebug then
+    print(...)
+  end
+end
+
+-- Use slash to toggle debug mode. Note: addon needs to be loaded first!
+SLASH_CRAFTINGPROFIT1 = "/craftingprofit"
+function SlashCmdList.CRAFTINGPROFIT(msg, editbox)
+  if CraftingProfitDebug then
+    CraftingProfitDebug = false
+    print("CraftingProfit debug_print disabled")
+  else
+    CraftingProfitDebug = true
+    print("CraftingProfit debug_print enabled")
+  end
 end
 
 -- Returns the minimum of auction and vendor price and if the price is from a vendor

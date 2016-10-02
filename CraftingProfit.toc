@@ -6,5 +6,6 @@
 ## Dependencies: Auctionator, Blizzard_TradeSkillUI
 ## LoadOnDemand: 1
 ## LoadWith: Blizzard_TradeSkillUI
+## SavedVariables: CraftingProfitDebug
 
 CraftingProfit.xml
