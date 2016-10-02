@@ -49,6 +49,7 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
 
   if not itemName then
+    debug_print("No itemName", itemLink, itemSellPrice)
     if not callback then
       -- Limit callback to one try
       C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
@@ -60,6 +61,7 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   for i = 1, numReagents do
     local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
     if not reagentName then
+      debug_print("No reagentName")
       if not callback then
         -- Limit callback to one try
         C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
