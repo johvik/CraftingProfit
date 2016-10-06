@@ -47,41 +47,99 @@ local function GetReagentPrice(reagentName)
   end
 end
 
--- Updates the crafting profit information for the given recipeID
-function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
-  debug_print("UpdateCraftingProfit", recipeID, callback)
-  self:Hide()
-  if not recipeID then
+-- Gets the name of the enchant scroll
+local function GetEnchantScrollName(recipeInfo)
+  local categoryInfo = C_TradeSkillUI.GetCategoryInfo(recipeInfo.categoryID)
+  if not categoryInfo then
+    debug_print("GetEnchantScrollName", "No categoryInfo")
     return
   end
+  local enchantType = categoryInfo.name:match("%w+")
+  if enchantType == "Glove" then
+    enchantType = "Gloves"
+  end
+  return "Enchant " .. enchantType .. " - " .. recipeInfo.name
+end
+
+-- Checks if all items in the recipe has been loaded
+local function RecipeLoaded(recipeID)
+  local recipeInfo = C_TradeSkillUI.GetRecipeInfo(recipeID)
+  if not recipeInfo then
+    debug_print("RecipeLoaded", "No recipeInfo")
+    return false
+  end
+  debug_print("RecipeLoaded", recipeInfo.name, recipeInfo.alternateVerb)
   local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+  if not itemLink then
+    debug_print("RecipeLoaded", "No itemLink")
+    return false
+  end
+
+  -- Keep going until GetItemInfo has been called for all reagents
+  local foundAll = true
+  if recipeInfo.alternateVerb ~= "Enchant" then
+    -- Enchants are a bit special since they don't have an item
+    local itemName = GetItemInfo(itemLink)
+    foundAll = foundAll and itemName ~= nil
+  end
+
+  local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
+  for i = 1, numReagents do
+    local reagentName, _, _ = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
+    foundAll = foundAll and reagentName ~= nil
+  end
+  debug_print("RecipeLoaded", foundAll)
+  return foundAll
+end
+
+-- Returns the crafting profit as text
+local function GetCraftingProfit(recipeID)
+  local profitTextRed = false
+  local profitText = "Unknown"
+  local costText = "Unknown"
+  local vendorText
+  local recipeInfo = C_TradeSkillUI.GetRecipeInfo(recipeID)
+  if not recipeInfo then
+    debug_print("GetCraftingProfit", "No recipeInfo")
+    return profitTextRed, profitText, costText, vendorText
+  end
+  debug_print("GetCraftingProfit", recipeInfo.name, recipeInfo.alternateVerb)
+
   local numItemsProduced = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
-  local itemName, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(itemLink)
+  local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
   local reagentsPrice = 0
   local reagentsPriceText = {}
   local reagentsFromVendor = {}
-  local numReagents = C_TradeSkillUI.GetRecipeNumReagents(recipeID)
+  debug_print("GetCraftingProfit", "numItemsProduced", numItemsProduced, "numReagents", numReagents)
 
-  -- not callback is a hack to let enchants pass, they always have itemName = nil
-  if not itemName and not callback then
-    debug_print("No itemName", itemLink, itemSellPrice)
-    if not callback then
-      -- Limit callback to one try
-      C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
+  local itemName
+  if recipeInfo.alternateVerb == "Enchant" then
+    -- Enchants are a bit special since they don't have an item
+    numItemsProduced = 1
+    itemName = GetEnchantScrollName(recipeInfo)
+    -- Most newer seems to be 625 c at a vendor others 1000 c
+    itemSellPrice = 625
+  else
+    local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+    if not itemLink then
+      debug_print("GetCraftingProfit", "No itemLink")
+      return profitTextRed, profitText, costText, vendorText
     end
-    return
+    _, _, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(itemLink)
+    itemName = recipeInfo.name
   end
 
-  debug_print("Getting reagents for ", itemName)
+  local itemAuctionPrice
+  if itemName then
+    itemAuctionPrice = Atr_GetAuctionPrice(itemName) -- Cannot use Atr_GetAuctionBuyout since it crashes with enchants
+  end
+  debug_print("GetCraftingProfit", itemName, "itemAuctionPrice", itemAuctionPrice, "itemSellPrice", itemSellPrice)
+
   for i = 1, numReagents do
     local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
     if not reagentName then
-      debug_print("No reagentName")
-      if not callback then
-        -- Limit callback to one try
-        C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
-      end
-      return
+      debug_print("GetCraftingProfit", "No reagentName")
+      return profitTextRed, profitText, costText, vendorText
     end
     local reagentTextureString = "|T"..reagentTexture..":0|t"
     local reagentPrice, reagentFromVendor = GetReagentPrice(reagentName)
@@ -95,65 +153,81 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
       table.insert(reagentsPriceText, reagentCount .. reagentTextureString)
     end
   end
+  debug_print("GetCraftingProfit", "reagentsPrice", reagentsPrice)
 
-  debug_print("Getting auction price")
-  local itemAuctionPrice = Atr_GetAuctionPrice(itemName) -- Cannot use Atr_GetAuctionBuyout since it crashes with enchants
   local profit
-  if itemAuctionPrice and reagentsPrice > 0 then
+  if itemAuctionPrice and itemSellPrice and reagentsPrice > 0 then
     -- We have a auction price and at least one reagent price
     local deposit = math.max(100, math.floor(0.15 * itemSellPrice))
     local cut = math.floor(0.05 * itemAuctionPrice)
     profit = numItemsProduced * (itemAuctionPrice - deposit - cut) - reagentsPrice
   end
+  debug_print("GetCraftingProfit", "profit", profit)
 
-  debug_print("Updating UI", profit)
   -- Update profit
   if profit then
-    local profitText = GetCoinTextureString(math.abs(profit))
+    profitText = GetCoinTextureString(math.abs(profit))
     if profit > 0 then
-      self.ProfitText:SetFontObject("GameFontHighlight")
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " - " .. table.concat(reagentsPriceText, " - ")
       end
     else
-      self.ProfitText:SetFontObject("GameFontRed")
+      profitTextRed = true
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " + " .. table.concat(reagentsPriceText, " + ")
       end
     end
-    self.ProfitText:SetText(profitText)
-  else
-    self.ProfitText:SetFontObject("GameFontHighlight")
-    self.ProfitText:SetText("Unknown")
   end
 
   -- Update cost
   if reagentsPrice > 0 then
-    local costText = GetCoinTextureString(reagentsPrice)
+    costText = GetCoinTextureString(reagentsPrice)
     if table.getn(reagentsPriceText) > 0 then
       costText = costText .. " + " .. table.concat(reagentsPriceText, " + ")
     end
-    self.CostText:SetText(costText)
-    self.CostHeadline:Show()
-    self.CostText:Show()
-  else
-    self.CostHeadline:Hide()
-    self.CostText:Hide()
   end
 
   -- Update vendor
   if table.getn(reagentsFromVendor) > 0 then
-    local vendorText = table.concat(reagentsFromVendor, " ")
-    self.VendorText:SetText(vendorText)
-    self.VendorHeadline:Show()
-    self.VendorText:Show()
-  else
-    self.VendorHeadline:Hide()
-    self.VendorText:Hide()
+    vendorText = table.concat(reagentsFromVendor, " ")
   end
 
-  self:Show()
-  debug_print("UpdateCraftingProfit done")
+  return profitTextRed, profitText, costText, vendorText
+end
+
+-- Updates the crafting profit information for the given recipeID
+function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
+  debug_print("UpdateCraftingProfit", recipeID, callback)
+  self:Hide()
+  if not recipeID then
+    return
+  end
+  if RecipeLoaded(recipeID) then
+    profitTextRed, profitText, costText, vendorText = GetCraftingProfit(recipeID)
+    if profitTextRed then
+      self.ProfitText:SetFontObject("GameFontRed")
+    else
+      self.ProfitText:SetFontObject("GameFontHighlight")
+    end
+    self.ProfitText:SetText(profitText)
+    self.CostText:SetText(costText)
+    if vendorText then
+      self.VendorText:SetText(vendorText)
+      self.VendorHeadline:Show()
+      self.VendorText:Show()
+    else
+      self.VendorHeadline:Hide()
+      self.VendorText:Hide()
+    end
+    self:Show()
+    debug_print("UpdateCraftingProfit done")
+  else
+    if not callback then
+      -- Limit callback to one try
+      debug_print("UpdateCraftingProfit", "trying again...")
+      C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
+    end
+  end
 end
 
 -- Updates the crafting profit without knowing the current recipeID
