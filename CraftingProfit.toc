@@ -3,9 +3,7 @@
 ## Author: johvik
 ## Version: 0.1
 ## Notes: Shows possible profit for crafting recipes based on Auctionator data
-## Dependencies: Auctionator, Blizzard_TradeSkillUI
-## LoadOnDemand: 1
-## LoadWith: Blizzard_TradeSkillUI
+## Dependencies: Auctionator
 ## SavedVariables: CraftingProfitDebug
 
 CraftingProfit.xml

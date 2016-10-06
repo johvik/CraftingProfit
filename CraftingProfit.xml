@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Script file="CraftingProfit.lua"/>
-  <Frame name="CraftingProfitFrame" mixin="CraftingProfitMixin" parent="TradeSkillFrame" hidden="true">
+  <Frame name="CraftingProfitFrame" mixin="CraftingProfitMixin" hidden="true">
     <Size x="1" y="1"/>
     <Layers>
       <Layer level="BACKGROUND">
@@ -44,6 +44,7 @@
     <Frames></Frames>
     <Scripts>
       <OnLoad method="OnLoad"/>
+      <OnEvent method="OnEvent"/>
     </Scripts>
   </Frame>
 </Ui>
