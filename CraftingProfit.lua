@@ -226,6 +226,8 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
       -- Limit callback to one try
       debug_print("UpdateCraftingProfit", "trying again...")
       C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
+    else
+      debug_print("UpdateCraftingProfit", "already tried :(")
     end
   end
 end
