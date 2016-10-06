@@ -242,7 +242,7 @@ local function UpdateCraftingProfitCurrentSelection()
 end
 
 function CraftingProfitMixin:Load()
-  debug_print("CraftingProfit load")
+  debug_print("CraftingProfit", "Load")
   self:SetParent(TradeSkillFrame.DetailsFrame.Contents)
   self:SetPoint("TOPLEFT", TradeSkillFrame.DetailsFrame.Contents, "BOTTOMLEFT", 5, -5)
 
@@ -251,12 +251,13 @@ function CraftingProfitMixin:Load()
   hooksecurefunc(TradeSkillFrame.RecipeList, "SetSelectedRecipeID", function(_, recipeID)
       self:UpdateCraftingProfit(recipeID)
     end)
-  debug_print("CraftingProfit loaded")
+  debug_print("CraftingProfit", "Loaded")
 end
 
 function CraftingProfitMixin:OnEvent(event, addon)
   if event == "ADDON_LOADED" and addon == "Blizzard_TradeSkillUI" then
     debug_print("CraftingProfit", "Blizzard_TradeSkillUI loaded")
+    self:UnregisterEvent("ADDON_LOADED")
     self:Load()
   end
 end
