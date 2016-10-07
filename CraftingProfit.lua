@@ -1,6 +1,7 @@
 local VENDOR_PRICES = {
   -- TODO Add more as needed
   ["Crystal Vial"] = 20,
+  ["Field Pack"] = 20000,
   ["Flaked Sea Salt"] = 5000,
   ["Dalapeño Pepper"] = 2780,
   ["Muskenbutter"] = 5000,
@@ -202,34 +203,36 @@ function CraftingProfitMixin:UpdateCraftingProfit(recipeID, callback)
   if not recipeID then
     return
   end
-  if RecipeLoaded(recipeID) then
-    profitTextRed, profitText, costText, vendorText = GetCraftingProfit(recipeID)
-    if profitTextRed then
-      self.ProfitText:SetFontObject("GameFontRed")
-    else
-      self.ProfitText:SetFontObject("GameFontHighlight")
-    end
-    self.ProfitText:SetText(profitText)
-    self.CostText:SetText(costText)
-    if vendorText then
-      self.VendorText:SetText(vendorText)
-      self.VendorHeadline:Show()
-      self.VendorText:Show()
-    else
-      self.VendorHeadline:Hide()
-      self.VendorText:Hide()
-    end
-    self:Show()
-    debug_print("UpdateCraftingProfit done")
-  else
+  if not RecipeLoaded(recipeID) then
     if not callback then
       -- Limit callback to one try
       debug_print("UpdateCraftingProfit", "trying again...")
       C_Timer.After(0.1, function() self:UpdateCraftingProfit(recipeID, true) end)
+      return
     else
-      debug_print("UpdateCraftingProfit", "already tried :(")
+      debug_print("UpdateCraftingProfit", "already tried again :(")
     end
   end
+
+  -- Update
+  profitTextRed, profitText, costText, vendorText = GetCraftingProfit(recipeID)
+  if profitTextRed then
+    self.ProfitText:SetFontObject("GameFontRed")
+  else
+    self.ProfitText:SetFontObject("GameFontHighlight")
+  end
+  self.ProfitText:SetText(profitText)
+  self.CostText:SetText(costText)
+  if vendorText then
+    self.VendorText:SetText(vendorText)
+    self.VendorHeadline:Show()
+    self.VendorText:Show()
+  else
+    self.VendorHeadline:Hide()
+    self.VendorText:Hide()
+  end
+  self:Show()
+  debug_print("UpdateCraftingProfit done")
 end
 
 -- Updates the crafting profit without knowing the current recipeID
