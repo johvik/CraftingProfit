@@ -157,11 +157,13 @@ local function GetCraftingProfit(recipeID)
   debug_print("GetCraftingProfit", "reagentsPrice", reagentsPrice)
 
   local profit
+  local itemPrice
   if itemAuctionPrice and itemSellPrice and reagentsPrice > 0 then
     -- We have a auction price and at least one reagent price
     local deposit = math.max(100, math.floor(0.15 * itemSellPrice))
     local cut = math.floor(0.05 * itemAuctionPrice)
-    profit = numItemsProduced * (itemAuctionPrice - deposit - cut) - reagentsPrice
+    itemPrice = itemAuctionPrice - deposit - cut
+    profit = numItemsProduced * itemPrice - reagentsPrice
   end
   debug_print("GetCraftingProfit", "profit", profit)
 
@@ -176,6 +178,14 @@ local function GetCraftingProfit(recipeID)
       profitTextRed = true
       if table.getn(reagentsPriceText) > 0 then
         profitText = profitText .. " + " .. table.concat(reagentsPriceText, " + ")
+      end
+
+      -- Show number of extra items in 10 crafts to make profit for Legion Combat Potions, Flasks, Trinkets and Utility Potions
+      if recipeInfo.categoryID == 434 or recipeInfo.categoryID == 435 or recipeInfo.categoryID == 437 or recipeInfo.categoryID == 438 then
+        if itemPrice > 0 and profit ~= 0 then
+          local procsRequired = math.ceil((-profit * 10) / itemPrice)
+          profitText = profitText .. "\n" .. procsRequired .. " extra in 10 crafts for profit"
+        end
       end
     end
   end
